@@ -1,0 +1,10 @@
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\bin\Debug\SkyscraperCenter.exe.config
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\bin\Debug\SkyscraperCenter.exe
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\bin\Debug\SkyscraperCenter.pdb
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\bin\Debug\itextsharp.dll
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\bin\Debug\itextsharp.xml
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\obj\Debug\SkyscraperCenter.csproj.CoreCompileInputs.cache
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\obj\Debug\SkyscraperCenter.csproj.CopyComplete
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\obj\Debug\SkyscraperCenter.exe
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\obj\Debug\SkyscraperCenter.pdb
+C:\Local Project\SkyscraperCenter\SkyscraperCenter\obj\Debug\SkyscraperCenter.csprojAssemblyReference.cache

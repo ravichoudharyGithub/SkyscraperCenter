@@ -1,0 +1,4178 @@
+<!doctype html>
+
+<html>
+<head>
+    <title>
+                    One World Trade Center -
+        
+        The Skyscraper Center
+    </title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/leaflet.css" rel="stylesheet">
+    <link href="/ammap/ammap.css" rel="stylesheet">
+    <link href="/css/jquery.dataTables.css" rel="stylesheet">
+    <link href="//cdn.jsdelivr.net/qtip2/2.2.1/jquery.qtip.min.css" rel="stylesheet">
+    <link href="//oss.maxcdn.com/jquery.trip.js/3.1.6/trip.min.css" rel="stylesheet">
+
+    <link href="/css/style.css?ver=20160407" rel="stylesheet">
+
+    <script src="//code.jquery.com/jquery-1.9.1.js"></script>
+
+    <script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
+    <script src="//cdn.jsdelivr.net/algoliasearch.helper/2.0.0/algoliasearch.helper.min.js"></script>
+
+    <script src="/js/hogan.min.js"></script>
+
+    <meta name="ahrefs-site-verification" content="f4a7c1f487f026a914b62841800a2ba00d7895ada65dc7fbe022594f59d86217">
+    <meta name="csrf-token" content="xvY8bz2dwUni3pka1b0P9FS3vI3JxMy0VeV0sA1T">
+
+    <style>
+        .blinking {
+            animation: blinkingText 0.6s infinite;
+        }
+
+        @keyframes  blinkingText {
+            0% {
+                color: #ffccff;
+            }
+            /*
+            49% {
+                color: transparent;
+            }
+            50% {
+                color: transparent;
+            }
+            99% {
+                color: transparent;
+            }
+            */
+            100% {
+                color: #e600e6;
+            }
+        }
+
+        .well {
+            background-color: rgb(108, 160, 214);
+            border: rgb(108, 160, 214);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id='header'>
+    <div class='container'>
+        <div id='header-top' class='row'>
+            <div class='span6 pull-left'>
+                <a href='/' style="
+                min-height: 59px;
+                min-width: 400px;
+                height: 59px;
+                width: 400px;
+                ">
+                    <img src="/img/Skyscraper_Center_Logo.png" alt='The Skyscraper Center' width='400' height='59'
+                         border='0'/>
+                </a>
+            </div>
+
+            <div id="header-search" class="span6  text-right">
+                <a href='http://www.ctbuh.org' target='_blank'>
+                    <img src='/img/TheSC_skyline_logo.png' alt='The Council on Tall Buildings and Urban Habitat'
+                         width='275' height='23' border='0' style="margin-top: -36px; "/>
+                </a>
+            </div>
+        </div>
+
+        <div class='row'>
+            <div id='header-nav' class='span10 pull-left'>
+                <ul id='menu' class="nav nav-pills">
+                    <li class=&#039;active&#039;><a
+                                href='/buildings'>Buildings</a></li>
+                    
+                    <li ><a
+                                href='/cities'>Cities</a></li>
+                    <li ><a
+                                href='/companies'>Companies</a></li>
+                    <li ><a
+                                href='/quick-lists'>Create Lists</a></li>
+                    <li ><a
+                                href='/compare-data'>Compare Data</a></li>
+                    
+                    
+                    
+                    
+
+                    <li>
+                                                    
+                            <a href='/locale/cn'> Chinese/中文</a>
+                                            </li>
+                </ul>
+            </div>
+
+            <div class='span2 pull-right text-right'>
+                
+                                    <div id='header-search' class=' pull-right text-right'>
+    <form class='form-inline custom-search-form' action='/search' method='get' style="margin: -3px!important;">
+
+    <input type='text' class='input-xlarge typeahead' name='q' id='search-input' autocomplete='off' spellcheck='false' placeholder="Search Buildings, Companies & Locations" style="bottom: 4px;padding:2px !important; width:270px !important; height: 15px;" />
+
+    </form>
+
+    <script type='text/javascript'>
+    $(document).ready(function() {
+        var algolia = algoliasearch('VQAAT9TYC4', 'eec96cb29df3072743c09f1cbb793281');
+        var algoliaCompanies = algolia.initIndex('SC_Companies');
+        var algoliaBuildings = algolia.initIndex('SC_Buildings');
+        var algoliaComplexes = algolia.initIndex('SC_Complexes');
+		
+		
+		var algoliaCities = algolia.initIndex('v2_cities');
+		var algoliaCountries = algolia.initIndex('v2_countries');
+
+        var templateCompany = Hogan.compile('<div class="company"><a href="/company/{{ id }}"><span style="display: block">{{{ _highlightResult.name.value }}}</span></a></div>');
+        var templateBuilding = Hogan.compile('<div class="building"><a href="{{ url }}"><span style="display: block">{{{ nameToUse }}}{{{ cityToUse }}}</span></a></div>');
+        var templateComplex = Hogan.compile('<div class="complex"><a href="{{ url }}"><span style="display: block">{{{ nameToUse }}}{{{ cityToUse }}}</span></a></div>');
+
+		var templateCity = Hogan.compile('<div class="city"><a href="/city/{{ url_name }}"><span style="display: block">{{ name }}</span></a></div>');
+		var templateCountry = Hogan.compile('<div class="country"><a href="/country/{{ url_name }}"><span style="display: block">{{ name }}</span></a></div>');
+		
+        var typeaheadCtrl = $('#search-input').typeahead({
+            minLength: 3,
+            hint: false,
+            highlight: false
+        }, [
+        {
+            source: algoliaBuildings.ttAdapter({ hitsPerPage: 4, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Buildings</div>",
+                suggestion: function(hit) {
+                    var cityToUse = '';
+                    var nameToUse = hit._highlightResult.name.value;
+
+                    if (hit.city != '') {
+                      cityToUse = ' <small>(' + hit.city + ')</small>';
+                    }
+
+                    hit.cityToUse = cityToUse;
+                    hit.nameToUse = nameToUse;
+
+                    return templateBuilding.render(hit);
+                }
+            }
+        },
+        {
+            source: algoliaComplexes.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Building Complexes</div>",
+                suggestion: function(hit) {
+                    var cityToUse = '';
+                    var nameToUse = hit._highlightResult.name.value;
+
+                    if (hit.city != '') {
+                      cityToUse = ' <small>(' + hit.city + ')</small>';
+                    }
+
+                    hit.cityToUse = cityToUse;
+                    hit.nameToUse = nameToUse;
+
+                    return templateComplex.render(hit);
+                }
+            }
+        },
+        {
+            source: algoliaCompanies.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Companies</div>",
+                suggestion: function(hit) { 
+					hit.url = '/company/' + hit.id;
+				return templateCompany.render(hit); 
+				
+				},
+            }
+        },
+		// add CITY + COUNTRY
+		{
+			source:  algoliaCities.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Cities</div>",
+                suggestion: function(hit) {
+					if(hit.slug){
+						hit.url_name = hit.slug;
+					} else {
+						hit.url_name = hit.name.replace(/ /g, '-').toLowerCase();
+					}
+					
+					return templateCity.render(hit);
+				},
+            }
+		},
+		{
+			source:  algoliaCountries.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Countries</div>",
+                suggestion: function(hit) {
+					hit.url_name = hit.name.replace(/ /g, '-').toLowerCase();
+					return templateCountry.render(hit);
+				},
+            }
+		}
+			// this is the end
+        ]);
+
+        typeaheadCtrl.on('typeahead:selected', function(evt, data) {
+			if (false && typeof data.url === "undefined"){
+				alert(JSON.stringify(data));
+			} else {
+				window.location = 'http://' + window.location.host + data.url;
+			}
+        });
+
+        // Append view all link
+        $('.tt-dropdown-menu').append('<div class="all-results"><a id="view-all-link" href="/search">View all results</a>');
+
+        $('#view-all-link').on('click', function(e) {
+            e.preventDefault();
+            window.location = 'http://' + window.location.host + '/search#q=' + $('#search-input').val();
+        });
+
+        // Append Algolia credit
+        $('.tt-dropdown-menu').append('<div class="powered-by-algoliasearch"><small><em>Powered by</em></small><a href="http://www.algolia.com/?utm_source=skyscrapercenter&amp;utm_medium=link&amp;utm_campaign=skyscrapercenter_search" title="Algolia Realtime Search" target="_blank"><img src="/img/algolia.png" alt="Algolia Realtime Search" width="48" height="15"></a></div>');
+    });
+    </script>
+</div>                            </div>
+        </div>
+    </div> <!-- /container -->
+</div>
+
+<div class='container'>
+    
+    
+    
+    
+    <div class='row section-container'>
+        <div class='span12'>
+            <h3>
+                One World Trade Center
+
+                                    <small>
+                        <a
+        id="btn-my-ctbuh-save"
+        class='btn btn-mini btn-in-heading disabled'
+        data-source-id="98"
+        data-heading="One World Trade Center"
+        data-image="https://images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill2.jpg"
+        data-url="https://www.skyscrapercenter.com/building/one-world-trade-center/98"
+        href='#'
+    >
+        <i class="icon-bookmark"></i>
+        Save to My CTBUH
+    </a>
+
+    <a
+        id="btn-my-ctbuh-view"
+        class='btn btn-mini btn-in-heading hidden'
+        href='https://www.ctbuh.org/my-ctbuh/building'
+    >
+        <i class="icon-bookmark"></i>
+        View in My CTBUH
+    </a>
+
+                        <a
+                            class='btn btn-mini btn-in-heading'
+                            href='/pdf/building/98'
+                            target='_blank'
+                        >
+                            <i class="icon-download"></i>
+                            Download PDF
+                        </a>
+                    </small>
+                            </h3>
+
+                    </div>
+    </div>
+
+    
+    <!--
+common.buildingAndComplexImages
+-->
+
+    <div class='row section-container'>
+                    <div class='span4'>
+		
+		<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill2.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill2.jpg&#039; target=&#039;_blank&#039;&gt;Download&lt;/a&gt;</small>">
+		<img class='img-rounded' src="//images.skyscrapercenter.com/thumbs/7430_300x415_6787_1016.jpg" width='300' height='415' border='0' alt="" />
+		</a>
+
+		<br />
+
+		<span class='muted'><small>Click an image to view larger version.</small></span>
+	</div>
+
+	<div class='span2'>
+		<div class='nano' id='building-thumbnails-container'>
+							<div class='nano-content' id='building-thumbnails'>
+
+					
+											
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall3_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall3_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/48896_80x80_2453_4468.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall2_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall2_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/48895_80x80_5274_7907.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre2.jpg" title="<small>&amp;copy; Judith Dupre &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre2.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/18838_80x80_1870_5102.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto1.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto1.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/32779_80x80_2489_9779.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_nathaniel-lindsey1.jpg" title="<small>&amp;copy; Nathaniel Lindsey &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_nathaniel-lindsey1.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/47834_80x80_2389_8228.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtci-2b.jpg" title="<small>&amp;copy; John W. Cahill/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/wtci-2b.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/29763_80x80_5496_2787.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall1_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall1_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/8646_80x80_7476_9708.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto2.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto2.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/49290_80x80_9840_9669.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill3.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill3.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/51452_80x80_5523_1157.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill1.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill1.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/28886_80x80_2827_8445.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill6.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill6.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/58554_80x80_3130.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill5.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill5.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/24473_80x80_5343_1620.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_top_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_top_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/32568_80x80_1249_5209.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_lookup4_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_lookup4_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/3060_80x80_7481_303.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_rps.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_rps.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/57976_80x80_9009_5734.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto3.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto3.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/49291_80x80_193_8632.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre1.jpg" title="<small>&amp;copy; Judith Dupre &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre1.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/14474_80x80_117_4457.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre4.jpg" title="<small>&amp;copy; Judith Dupre &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre4.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/22848_80x80_210_2890.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_plazaentrance1_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_plazaentrance1_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/48899_80x80_4256_171.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_lookup1_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_lookup1_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/2749_80x80_7012_4924.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_lookup3_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_lookup3_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/48897_80x80_2066.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill4.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_john-w-cahill4.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/734_80x80_6257_6295.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre3.jpg" title="<small>&amp;copy; Judith Dupre &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_judith-dupre3.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/24780_80x80_4769_8400.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_vesseyentrance1_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_vesseyentrance1_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/24955_80x80_2125_9214.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_lookup2_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_lookup2_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/30424_80x80_3424_7352.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_vesseyentrance2_mg.jpg" title="<small>&amp;copy; Marshall Gerometta/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_vesseyentrance2_mg.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/48898_80x80_1715_1526.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto4.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto4.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/13626_80x80_1098_3902.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto5.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto5.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/49292_80x80_2424_6980.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto6.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto6.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/31285_80x80_6666_910.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall8_tp.jpg" title="<small>&amp;copy; Tectonic Photo &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall8_tp.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/44569_80x80_7728_9852.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto7.jpg" title="<small>&amp;copy; James Ewing | OTTO &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_james-ewing-otto7.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/35715_80x80_9054_7014.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_stefano-cammelli1.jpg" title="<small>&amp;copy; Stefano Cammelli &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/one-world-trade-center_stefano-cammelli1.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/35753_80x80_5472_9233.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall9_tp.jpg" title="<small>&amp;copy; Tectonic Photo &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall9_tp.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/8161_80x80_593_5793.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall_tp.jpg" title="<small>&amp;copy; Tectonic Photo &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall_tp.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/37964_80x80_9691_5992.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc11b.jpg" title="<small>&amp;copy; John W. Cahill/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/wtc11b.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/45387_80x80_3807_3690.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc10b.jpg" title="<small>&amp;copy; John W. Cahill/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/wtc10b.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/40381_80x80_1737.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc4b.jpg" title="<small>&amp;copy; John W. Cahill/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/wtc4b.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/35526_80x80_3381_2397.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_butler-v-adams1.jpg" title="<small>&amp;copy; Butler V. Adams </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/71321_80x80_1705_2244.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall2_tp.jpg" title="<small>&amp;copy; Tectonic Photo &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall2_tp.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/44558_80x80_5310_2205.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_overall1_jb.jpg" title="<small>&amp;copy; Jessica Butler/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_overall1_jb.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/43837_80x80_2523_9195.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc-1b.jpg" title="<small>&amp;copy; John W. Cahill/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/wtc-1b.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/13681_80x80_5009_6947.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/1wtc_lookup_jb.jpg" title="<small>&amp;copy; Jessica Butler/CTBUH &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/1wtc_lookup_jb.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/22511_80x80_2907_6344.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/WTCT1_Ext-aerialview_(c)SOM-dboxStudio2.jpg" title="<small>&amp;copy; SOM / dboxStudio </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/1476_80x80_1055_9286.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtct1_ext-site_(c)dboxstudio.jpg" title="<small>&amp;copy; dboxStudio </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/42882_80x80_4566_114.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtct1_ext-westplaza_(c)somqubdesign.jpg" title="<small>&amp;copy; SOM / qubdesign </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/2813_80x80_5657_3450.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc1_int-lobby_(c)som.jpg" title="<small>&amp;copy; SOM  </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/28408_80x80_7853_6446.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtct1_lobby_(c)som.jpg" title="<small>&amp;copy; SOM </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/17092_80x80_3173_3359.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc1_int-belowgrade_(c)som.jpg" title="<small>&amp;copy; SOM  </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/6412_80x80_881_7352.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtc_ext-overallrender_(c)som.jpg" title="<small>&amp;copy; SOM </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/36410_80x80_3977.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/wtct1_ext-skyline2_(c)som-dboxstudio.jpg" title="<small>&amp;copy; SOM / dboxStudio </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/42884_80x80_8516.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_rod-abid1.jpg" title="<small>&amp;copy; Rod Abid </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/72129_80x80_9076_1415.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/one-world-trade-center_rod-abid2.jpg" title="<small>&amp;copy; Rod Abid </small>">
+
+							<img  style='margin-bottom: 1em'  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/72130_80x80_8631.jpg" border='0' alt="" />
+
+							</a>
+						
+															</div>
+
+				<div class='fadeout'></div>
+					</div>
+	</div>
+        
+        <div class='span6' id='figures-section'>
+                            <span class='figures-container' style="top: 120px">
+			<span id='height-occupied-left' style='padding-top: 0px'>
+				<a class='definition-trigger' href='/definition/height-occupied'>Height: Occupied</a><br />
+				<span class='muted'>
+					386.5 m / 1,268 ft
+
+									</span>
+			</span>
+
+			<span id='height-occupied-right'>
+				&nbsp;
+			</span>
+		</span>
+	
+			<span class='figures-container' id='height-architecture-container' style="top: 0px">
+			<span id='height-architecture-left'>
+									<a class='definition-trigger' href='/definition/height-tip'>Height: To Tip</a><br />
+					<span class='muted' style='display: inline-block; margin-bottom: 2px'>
+						546.2 m / 1,792 ft
+
+											</span><br />
+				
+				<a class='definition-trigger' href='/definition/height-architectural'>Height: Architectural</a><br />
+				<span class='muted'>
+					541.3 m / 1,776 ft
+
+									</span>
+			</span>
+
+			 <span id='height-architecture-right'>
+			 	&nbsp;
+			 </span>
+		</span>
+	
+	<div class='figures-container' id='building-image-container'>
+		<img src='/img/building-outlines/OneWTC.png' alt="One World Trade Center Outline" />
+	</div>
+
+	 
+
+<span id='table-figures-container' class='figures-container-right' >
+	<table id='table-figures'>
+		
+					<tr><td><a class='definition-trigger' href='/definition/height-observatory'>Height: Observatory</a><br />
+			<span class='muted'>
+				386.5 m / 1,268 ft
+
+							</span></td></tr>
+		
+		
+					<tr><td><a class='definition-trigger' href='/definition/floors-above'>Floors Above Ground</a><br /><span class='muted'>94</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/floors-below'>Floors Below Ground</a><br /><span class='muted'>5</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/elevators'># of Elevators</a><br /><span class='muted'>73</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/elevator-speed'>Top Elevator Speed</a><br /><span class='muted'>10.16 m/s</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/tower-gfa'>Tower GFA</a><br /><span class='muted'>325,279 m&sup2; / 3,501,274 ft&sup2;</span></td></tr>
+		
+		
+		
+		
+			</table>
+</span>
+                    </div>
+            </div>
+
+    <!-- start sections -->
+    <div class='row section-container'>
+        
+                    <div class='span6 brick'>
+                <h4>Facts</h4>
+
+                <table class='table table-condensed table-building-data'>
+                    <tbody>
+                    <tr>
+		<td width='150'><a class='definition-trigger' href='/definition/official-name'>Official Name</a></td>
+		<td>One World Trade Center</td>
+	</tr>
+
+			<tr>
+			<td><a class='definition-trigger' href='/definition/complex'>Name of Complex</a></td>
+			<td><a href='/complex/200'>World Trade Center</a></td>
+		</tr>
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/other-names'>Other Names</a></td>
+			<td>Freedom Tower</td>
+		</tr>
+	
+	<tr>
+		<td><a class='definition-trigger' href='/definition/structure-type'>Structure Type</a></td>
+		<td>Building</td>
+	</tr>
+
+	<tr>
+		<td><a class='definition-trigger' href='/definition/status'>Status</a></td>
+		<td>Completed</td>
+	</tr>
+
+			<tr>
+			<td><a class='definition-trigger' href='/definition/country'>Country</a></td>
+			<td><a href='/country/united-states'>United States</a></td>
+		</tr>
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/city'>City</a></td>
+			<td><a href='/city/new-york-city'>New York City</a></td>
+		</tr>
+	
+			
+		<tr>
+			<td>
+									Street Address &amp; Map
+							</td>
+
+			<td>
+									<a id='map-trigger' href='/map/building/98'>1 World Trade Center</a>
+							</td>
+		</tr>
+	
+			<tr>
+			<td>Postal Code</td>
+			<td>10048</td>
+		</tr>
+	
+			<tr>
+			<td>
+				<a class='definition-trigger' href='/definition/function'>
+											Building Function
+									</a>
+			</td>
+			<td>office</td>
+		</tr>
+	
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/material'>Structural Material</a></td>
+			<td>composite
+
+						<br>
+			<ul>
+				<li>Core: Reinforced Concrete</li>
+				<li>Columns: Steel</li>
+				<li>Floor Spanning: Steel</li>
+			</ul>
+			
+			</td>
+		</tr>
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/energy-label'>Energy Label</a></td>
+			<td>LEED Gold</td>
+		</tr>
+	
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/proposed'>Proposed</a></td>
+			<td>2005</td>
+		</tr>
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/construction'>Construction Start</a></td>
+			<td>2006</td>
+		</tr>
+	
+			<tr>
+			<td>
+				<a class='definition-trigger' href='/definition/completion'>Completion</a>
+			</td>
+			<td>2014</td>
+		</tr>
+	
+	
+	
+	
+	
+			<tr>
+			<td>Official Website</td>
+
+			<td>
+									<a href='http://onewtc.com/' target='_blank'>One World Trade Center</a>
+							</td>
+		</tr>
+	                    <tr>
+			<td colspan='2'>
+				<h6>
+					Rankings
+
+					<small>Click arrows to view the next taller/shorter buildings</small>
+				</h6>
+			</td>
+		</tr>
+
+					<tr>
+				<td><a class='definition-trigger' href='/definition/ranking-global'>Global Ranking</a></td>
+
+				<td>
+					#6 Tallest in the <a href='/x/40055'>World</a>
+
+					<span class='pull-right'>
+													<a class='btn btn-mini faded tooltip-trigger' href="/building/lotte-world-tower/88" title="Lotte World Tower"><i class='icon-chevron-up'></i></a>
+						
+													<a class='btn btn-mini faded tooltip-trigger' href="/building/guangzhou-ctf-finance-centre/176" title="Guangzhou CTF Finance Centre"><i class='icon-chevron-down'></i></a>
+											</span>
+				</td>
+			</tr>
+		
+					<tr>
+				<td><a class='definition-trigger' href='/definition/ranking-regional'>Regional Ranking</a></td>
+				<td>
+					#1 Tallest in <a href='/compare-data/submit?type%5B%5D=building&status%5B%5D=COM&base_region=2&base_country=0&base_city=0&base_height_range=3&base_company=All&base_min_year=0&base_max_year=9999&skip_comparison=on&output%5B%5D=list&dataSubmit=Show+Results'>North America</a>
+
+					<span class='pull-right'>
+						
+													<a class='btn btn-mini faded tooltip-trigger' href="/building/willis-tower/169" title="Willis Tower"><i class='icon-chevron-down'></i></a>
+											</span>
+				</td>
+			</tr>
+		
+					<tr>
+				<td><a class='definition-trigger' href='/definition/ranking-national'>National Ranking</a></td>
+				<td>
+					#1 Tallest in <a href='/country/united-states'>United States</a>
+
+					<span class='pull-right'>
+						
+													<a class='btn btn-mini faded tooltip-trigger' href="/building/willis-tower/169" title="Willis Tower"><i class='icon-chevron-down'></i></a>
+											</span>
+				</td>
+			</tr>
+		
+					<tr>
+				<td><a class='definition-trigger' href='/definition/ranking-city'>City Ranking</a></td>
+				<td>
+					#1 Tallest in <a href='/city/new-york-city'>New York City</a>
+
+					<span class='pull-right'>
+						
+													<a class='btn btn-mini faded tooltip-trigger' href="/building/432-park-avenue/13227" title="432 Park Avenue"><i class='icon-chevron-down'></i></a>
+											</span>
+				</td>
+			</tr>
+			                    </tbody>
+                </table>
+            </div>
+        
+        
+                    <div class='span6 brick'>
+                                    <h4>Companies Involved</h4>
+                
+                <table class='table table-condensed table-building-data'>
+<tbody>
+	
+			
+		
+					<tr>
+				<td colspan='2'>
+											Owner
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Current
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															1 World Trade Center LLC
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Past
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Silverstein Properties
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td width='150'>
+											Developer
+									</td>
+				<td>
+											
+													
+															Port Authority of New York and New Jersey;
+							
+																				
+															<a href='/company/454'>The Durst Organization</a>
+							
+																						</td>
+			</tr>
+		
+					
+		
+					<tr>
+				<td colspan='2'>
+											Architect
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/designarch'>Design</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/354'>Skidmore, Owings &amp; Merrill LLP</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td colspan='2'>
+											Structural Engineer
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/designengi'>Design</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/631'>WSP Group</a>;
+							
+																				
+															<a href='/company/613'>Schlaich Bergermann und Partner</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/peerengi'>Peer Review</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/596'>Leslie E. Robertson Associates</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td colspan='2'>
+											MEP Engineer
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/designengi'>Design</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/4876'>Jaros, Baum &amp; Bolles</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td width='150'>
+											<a class='definition-trigger' href='/definition/manager'>Project Manager</a>
+									</td>
+				<td>
+											
+													
+															STV
+							
+																						</td>
+			</tr>
+		
+					
+		
+					<tr>
+				<td width='150'>
+											<a class='definition-trigger' href='/definition/contractor'>Main Contractor</a>
+									</td>
+				<td>
+											
+													
+															<a href='/company/1717'>Tishman Construction</a>
+							
+																						</td>
+			</tr>
+		
+					
+		
+					<tr>
+				<td colspan='2'>
+											<a class='definition-trigger' href='/definition/consultant'>Other Consultant</a>
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Acoustics
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/6932'>Cerami &amp; Associates</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Building Monitoring
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7887'>Viridian Energy &amp; Environmental, LLC</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Civil
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Philip Habib &amp; Associates
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Code
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7462'>Code Consultants, Inc.</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Cost
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/4206'>AECOM</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Energy Concept
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7887'>Viridian Energy &amp; Environmental, LLC</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Environmental
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Arnold &amp; Porter LLP
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/facade'>Fa&ccedil;ade</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7887'>Viridian Energy &amp; Environmental, LLC</a>;
+							
+																				
+															Benson Industries;
+							
+																				
+															<a href='/company/4986'>Permasteelisa Group</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Fa&ccedil;ade Maintenance
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/6826'>Lerch Bates</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Geotechnical
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Mueser Rutledge Consulting Engineers
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Landscape
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Mathews Nielsen Landscape Architects;
+							
+																				
+															Peter Walker Landscape Architects
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Lighting
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7103'>Brandston Partnership, Inc.</a>;
+							
+																				
+															Claude Engle
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Marketing
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/8550'>Wordsearch</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Observatory
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Legends;
+							
+																				
+															The Hettema Group
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Roofing
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7887'>Viridian Energy &amp; Environmental, LLC</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Security
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Ducibella Venter &amp; Santore
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Traffic
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Philip Habib &amp; Associates
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Vertical Transportation
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/4876'>Jaros, Baum &amp; Bolles</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Way Finding
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Pentagram
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Wind
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/3928'>RWDI</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td colspan='2'>
+											<a class='definition-trigger' href='/definition/supplier'>Material Supplier</a>
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Cladding
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/13892'>Kuraray</a>;
+							
+																				
+															<a href='/company/17345'>POHL Group</a>;
+							
+																				
+															<a href='/company/9624'>CS Group Construction Specialties Company</a>;
+							
+																				
+															Viracon
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Elevator
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/826'>thyssenkrupp</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Fire Proofing
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Grace Construction Products
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Interior Partition
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/17780'>Studco Australia Pty Ltd</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Sealants
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/5528'>Dow Corning Corporation</a>;
+							
+																				
+															<a href='/company/10071'>Sika Services AG</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Steel
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7007'>ArcelorMittal</a>
+							
+																		</td>
+				</tr>
+						</tbody>
+</table>
+
+                            </div>
+        
+                    <div class='span12 inner-section'>
+                <h4>About One World Trade Center</h4>
+
+                <div id='about-text'>One World Trade Center recaptures the New York skyline, reasserts downtown Manhattan’s preeminence as a business center, and establishes a new civic icon for the country. It is a memorable architectural landmark for the city and the nation, and connects seamlessly to the city with linkages to an extensive underground transportation network. Extending the long tradition of American ingenuity in high-rise construction, the design solution is an innovative mix of architecture, structure, urban design, safety, and sustainability.<br />
+<br />
+The tower is a bold icon in the sky that acknowledges the adjacent memorial. While the memorial, carved out of the earth, speaks of the past and of remembrance, One World Trade Center speaks about the future and hope as it rises upward in a faceted form filled with, and reflecting, light. This tower evokes the slender, tapering triangular forms of great New York City icons such as the Chrysler Building and Empire State Building and replaces almost one quarter of the total office space lost on September 11, 2001 in a single building.<br />
+<br />
+As the tower rises from a cubic base, its edges are chamfered back, resulting in a faceted form composed of eight elongated isosceles triangles. At its middle, the tower forms a perfect octagon in plan and then culminates in a glass parapet whose plan is a 150-foot-by-150-foot square, rotated 45 degrees from the base. Its overall effect is that of a crystalline form that captures an ever-evolving display of refracted light. As the sun moves through the sky or pedestrians move around the tower, the surfaces appear like a kaleidoscope, and change throughout the day as light and weather conditions change.</div>
+
+                
+                                    <script>
+                        /*
+                        Bug in trunk8 causes "read more" text to be broken when content ends in break tags so replace with correct content
+                         */
+                        function updateTruncatedText(elementId) {
+                            var truncatedContents = $(elementId).html();
+                            truncatedContents = truncatedContents.replace('<br>' + "\n" + '<br&hellip; <a="" id="read-more" href="#">Read more</br&hellip;>', ' <a id="read-more" href="#">Read more</a>');
+                            truncatedContents = truncatedContents.replace('<br&hellip; <a="" id="read-more" href="#">Read more</br&hellip;>', ' <a id="read-more" href="#">Read more</a>');
+
+                            $(elementId).html(truncatedContents);
+                        }
+
+                        /*
+                        Delay update to give DOM time to update
+                         */
+                        function delayTruncatedTextUpdate(elementId) {
+                            setTimeout(function () {
+                                updateTruncatedText(elementId);
+                            }, 100);
+                        }
+
+                        var trunk8Settings = {
+                            lines: 6,
+                            tooltip: false,
+                            fill: "&hellip; <a id='read-more' href='#'>Read more</a>",
+                            onTruncate: delayTruncatedTextUpdate('#about-text')
+                        };
+
+                        $(document).ready(function () {
+                            $('#about-text').trunk8(trunk8Settings);
+
+                            $('#about-text').on('click', '#read-more', function (event) {
+                                $(this).parent().trunk8('revert').append(" <a id='read-less' href='#''>Hide</a>");
+                                return false;
+                            });
+
+                            $('#about-text').on('click', '#read-less', function (event) {
+                                $(this).parent().trunk8(trunk8Settings);
+                                delayTruncatedTextUpdate('#about-text');
+                                return false;
+                            });
+                        });
+                    </script>
+                            </div>
+        
+        
+                    <a id='Resources'></a>
+        
+                    
+            <div class='span6 brick'>
+                <h4>CTBUH Initiatives</h4>
+
+                                                            <p>
+    
+	<b>Vertical Transportation: Ascent &amp; Acceleration</b>
+
+	
+    <br/>
+
+    
+    <span class='muted'>
+
+			12 Sep 2017
+		
+    &ndash;
+
+	CTBUH Research
+
+        	</span>
+</p>
+
+                                                                                                        <p>
+    
+	<b>Second CAF-CTBUH Event Examines Tall Building Safety</b>
+
+	
+    <br/>
+
+    
+    <span class='muted'>
+
+			18 May 2017
+		
+    &ndash;
+
+	Event
+
+                    Report
+        	</span>
+</p>
+
+                                                                                                        <p>
+            <a href="http://skyscrapercenter.com/100-tallest-book" target="_blank">
+	
+	<b>Top Company Rankings: The World’s 100 Tallest Buildings</b>
+
+	        </a>
+    
+    <br/>
+
+    
+    <span class='muted'>
+
+			13 Oct 2016
+		
+    &ndash;
+
+	CTBUH Research
+
+        	</span>
+</p>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        
+                                    <p>
+                                                    <a class='inline' href='#initiatives'>
+                                
+                                        More Initiatives</a> <i
+                                            class='icon-arrow-right'></i>
+                            </a>
+                    </p>
+
+                                            <div class='inline_content'>
+                            <div id='initiatives'>
+                                <h4>CTBUH Initiatives Related to One World Trade Center</h4>
+
+                                <div id='initiative-tabs' class="tabbable">
+    
+    <ul class="nav nav-tabs  hidden ">
+        
+                                    <li><a href='#initiatives-2017'
+                       data-toggle='tab'>2017 &amp; Older</a></li>
+            
+                                
+                                
+                                
+                                
+                                
+                                
+                        </ul>
+
+    <div class="tab-content">
+        
+                                    
+    <div class='tab-pane' id='initiatives-2017'>
+        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/1341-SHT-3170.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    Vertical Transportation: Ascent &amp; Acceleration
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        12 Sep 2017, Chicago
+            
+            &ndash;
+
+			CTBUH Research
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            CTBUH partnered with Guinness World Records to identify the commercial building with the fastest elevator speeds and longest vertical runs.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/1282-CAF-2.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    Second CAF-CTBUH Event Examines Tall Building Safety
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        18 May 2017, Chicago
+            
+            &ndash;
+
+			Event
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            The CTBUH, in conjunction with the Chicago Architecture Foundation (CAF), held the second of the four-part “Building Tall” lecture series, this time focused on &quot;Securing Tall.&quot;
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+                            <a href="http://skyscrapercenter.com/100-tallest-book" target="_blank">
+                    
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/1120-100Tallest-thumb.jpg' border='0'/>
+
+                                    </a>
+                    </div>
+
+        <div class='span7'>
+                            <a href="http://skyscrapercenter.com/100-tallest-book" target="_blank">
+                    
+                    <b>
+                                                    Top Company Rankings: The World’s 100 Tallest Buildings
+                                            </b>
+
+                                    </a>
+                        <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        13 Oct 2016, Chicago
+            
+            &ndash;
+
+			CTBUH Research
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            The Council is pleased to announce the Top Company Rankings for numerous disciplines as derived from the list of projects appearing in 100 of the World’s Tallest Buildings.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+                            <a href="http://2015.ctbuh.org/tours/technical-tours/one-world-trade-center-tour/" target="_blank">
+                    
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/954-1WTC_1.jpg' border='0'/>
+
+                                    </a>
+                    </div>
+
+        <div class='span7'>
+                            <a href="http://2015.ctbuh.org/tours/technical-tours/one-world-trade-center-tour/" target="_blank">
+                    
+                    <b>
+                                                    World Trade Center: One WTC Office Building Tour
+                                            </b>
+
+                                    </a>
+                        <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        28 Oct 2015, New York City
+            
+            &ndash;
+
+			Tour
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            CTBUH 2015 delegates toured One World Trade Center Office Building which is the current tallest building in the Americas.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+                            <a href="http://2015.ctbuh.org/tours/technical-tours/world-trade-center-urban-domain-tour/" target="_blank">
+                    
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/966-WTCUrban_1.jpg' border='0'/>
+
+                                    </a>
+                    </div>
+
+        <div class='span7'>
+                            <a href="http://2015.ctbuh.org/tours/technical-tours/world-trade-center-urban-domain-tour/" target="_blank">
+                    
+                    <b>
+                                                    World Trade Center: Urban Domain Tour
+                                            </b>
+
+                                    </a>
+                        <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        28 Oct 2015, New York City
+            
+            &ndash;
+
+			Tour
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            CTBUH 2015 delegates toured 30 Park Place which will house the Four Seasons Hotel and Private Residences Downtown New York.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/882-Gibbons_Craig.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    10_15 CTBUH Leader&#039;s Message
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        27 Oct 2015, New York City
+            
+            &ndash;
+
+			Leaders Message
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            CTBUH Board of Trustees, Secretary Craig Gibbons give a CTBUH Leader&#039;s Message on 2015 International Conference in New York City.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+                            <a href="http://2015.ctbuh.org/social-events/vip-reception/" target="_blank">
+                    
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/938-VIP.jpg' border='0'/>
+
+                                    </a>
+                    </div>
+
+        <div class='span7'>
+                            <a href="http://2015.ctbuh.org/social-events/vip-reception/" target="_blank">
+                    
+                    <b>
+                                                    Opening VIP Reception
+                                            </b>
+
+                                    </a>
+                        <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        25 Oct 2015, New York City
+            
+            &ndash;
+
+			Conference Activity
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            This special reception held on the eve of the Conference gave VIPs a unique opportunity to mingle in the fantastic setting of the new One World Trade Center.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/626-1WTC_thumb.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    One World Trade Center is Now the World’s Third-Tallest Building
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        17 Nov 2014, New York City
+            
+            &ndash;
+
+			CTBUH News
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            The 541-meter (1,776-foot) One World Trade Center has now become the world’s third-tallest building, according to the height criteria set by the CTBUH.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/740-TW2_125.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    Building Movement and Damping Workshop, Shanghai 2014
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        16 Sep 2014, Shanghai
+            
+            &ndash;
+
+			Event
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            The Building Movement and Damping Technical Workshop reviewed some of the latest strategies and concepts for helping tall buildings avoid movement in seismic and wind events.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/549-WTCVisit.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    CTBUH Visits 1WTC, 4WTC and 7WTC
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        21 May 2014, New York City
+            
+            &ndash;
+
+			Tour
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            Just six months after CTBUH confirmed One World Trade Center&#039;s height, Executive Director Antony Wood and Events Manager Jessica Rinkel toured the building.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/NYC/1WTC.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    CTBUH Affirms One World Trade Center Height of 1776&#039;
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        12 Nov 2013, Chicago
+            
+            &ndash;
+
+			CTBUH News
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            The CTBUH Height Committee reached a consensus that One World Trade Center’s height to its architectural top is 1,776 feet (541.3 meters).
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/NYC/hudson_yards.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    New York’s New Delirium
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        Oct 2013, New York City
+            
+            &ndash;
+
+			Tour
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            At least five once-in-a-lifetime multi-acre projects are underway in New York. CTBUH Editor Daniel Safarik reports on his journey to investigate further.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/330-OneWorldTradeRedesign_125.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    Questions on One World Trade Center Height
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        10 May 2012, New York City
+            
+            &ndash;
+
+			CTBUH News
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            One World Trade Center have raised questions about the ultimate height of the tower, which is currently planned as the tallest building in North America.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/138-Tallest20in2020.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    The Tallest 20 in 2020: Entering the Era of the Megatall
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        8 Dec 2011, Chicago
+            
+            &ndash;
+
+			CTBUH Research
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            Within this decade we will likely witness not only the world’s first kilometer-tall building, but also the completion of a significant number of buildings over 600 meters.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//www.ctbuh.org/Portals/0/Publications/CTBUH_Journal/Tall%20Buildings%20in%20Numbers/Journal2011_IssueIII_Numbers_sm_100x100.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    TBIN New York
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        4 Oct 2011, New York City
+            
+            &ndash;
+
+			Event
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            New York’s dramatic skyline, over a century in the making, has for years been the envy of cities around the world. From the very birth of the tall building typology, New York has been at the forefront&amp;hellip;
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//www.ctbuh.org/Portals/0/Feature%20Archive/Tall%20Building/2011/WTCT1_small.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    One World Trade Center Chosen as Featured Building
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        Sep 2011, New York City
+            
+            &ndash;
+
+			Featured Tall Building
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            Part of the ambitious World Trade Center redevelopment, the 541-meter One World Trade Center (1WTC), designed by SOM, rises on the northwest corner of the Lower Manhattan site.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+            
+                    <img class='img-rounded' src='//global.ctbuh.org/img/initiatives/thumbnails/79-56.jpg' border='0'/>
+
+                            </div>
+
+        <div class='span7'>
+            
+                    <b>
+                                                    World Trade Center Tour Report
+                                            </b>
+
+                                <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        3 Apr 2011, New York City
+            
+            &ndash;
+
+			Tour
+
+                Report
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            Almost ten years after the destruction of the twin towers, we can now see that the reconstruction of the World Trade Center site is in full swing.
+        </div>
+    </div>
+ 
+        
+        
+                        
+                    <div class='row inner-section'>
+        <div class='span1'>
+                            <a href="http://www.skyscrapercenter.com/year-in-review/2014" target="_blank">
+                    
+                    <img class='img-rounded' src='//global.ctbuh.org/img/resources/1972-TBIN_2014Review.jpg' border='0'/>
+
+                                    </a>
+                    </div>
+
+        <div class='span7'>
+                            <a href="http://www.skyscrapercenter.com/year-in-review/2014" target="_blank">
+                    
+                    <b>
+                                                    CTBUH Releases Year in Review: Tall Trends of 2014
+                                            </b>
+
+                                    </a>
+                        <br/>
+
+            <span class='muted'>
+			<small>
+			
+                        Dec 2014
+            
+            &ndash;
+
+			CTBUH Journal Paper
+
+                
+
+                			</small>
+			</span>
+
+            <br/>
+
+            
+            An All-Time Record 97 Buildings of 200 Meters or Higher Completed in 2014 and 2014 showed further shifts towards Asia, and also surprising developments in building functions and structural materials.
+        </div>
+    </div>
+ 
+        
+        
+            </div> <!-- /tab-pane -->
+        </div> <!-- /tab-content -->
+</div> <!-- /tabbable -->
+                            </div>
+                        </div>
+                                                </div>
+        
+        
+                    
+            <div class='span6 brick'>
+                <h4>Videos</h4>
+
+                                                            <p>
+	<a href="http://global.ctbuh.org/video/3784" target="_blank"><b>
+	Five Minutes With: Carla Swickerath
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		9 Jul 2018 &ndash;
+
+		
+
+		Carla Swickerath, Studio Daniel Libeskind
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://global.ctbuh.org/video/3420" target="_blank"><b>
+	Quay Quarter Tower: Humanizing the High-Rise
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		30 Oct 2017 &ndash;
+
+		
+
+		Kim Nielsen, 3XN
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://global.ctbuh.org/video/3027" target="_blank"><b>
+	From San Diego to Guangzhou: The Story of Marketing Tall Buildings
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		19 Oct 2016 &ndash;
+
+		
+
+		William Murray, Wordsearch
+	</span>
+</p>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                    
+                                    <p>
+                                                    <a class='inline' href='#Video'>
+                                
+                                        More Videos</a> <i
+                                            class='icon-arrow-right'></i>
+                            </a>
+                    </p>
+
+                                            <div class='inline_content'>
+                            <div id='videos'>
+                                <h4>Videos Related to One World Trade Center</h4>
+
+                                <div class='inline_content'>
+    <div id='Video'>
+        <h4>Videos Related to One World Trade Center</h4>
+
+        <div id='Video-tabs' class='tabbable'>
+            
+            <ul class="nav nav-tabs ">
+                                                            <li><a href='#Video-2018' data-toggle='tab'>2018</a></li>
+                                                                                <li><a href='#Video-2017' data-toggle='tab'>2017</a></li>
+                                                                                <li><a href='#Video-2016' data-toggle='tab'>2016</a></li>
+                                                                                <li><a href='#Video-2015' data-toggle='tab'>2015</a></li>
+                                                                                <li><a href='#Video-2014' data-toggle='tab'>2014</a></li>
+                                                                                <li><a href='#Video-2012' data-toggle='tab'>2012</a></li>
+                                                                                <li><a href='#Video-2011' data-toggle='tab'>2011</a></li>
+                                                </ul>
+
+            <div class='tab-content'>
+                
+                                                            
+            <div class='tab-pane' id='Video-2018'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/3784" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3784-Carla.JPG' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/3784" target="_blank">
+                    
+                    Five Minutes With: Carla Swickerath
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        9 Jul 2018 &ndash;
+
+		                Monthly Video Series;
+            
+            
+                            Carla Swickerath, Studio Daniel Libeskind
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Carla Swickerath, Partner, Studio Libeskind, sat down with CTBUH to discuss the design approach and urban impact of the World Trade Center complex in New York City, for&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Video-2017'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/3420" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3420-1.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/3420" target="_blank">
+                    
+                    Quay Quarter Tower: Humanizing the High-Rise
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        30 Oct 2017 &ndash;
+
+		                Presentation at CTBUH 2017 Australia Conference;
+            
+            
+                            Kim Nielsen, 3XN
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Quay Quarter Tower (QQT) will create a stunning new building on the Sydney skyline that sets new benchmarks in office tower design globally and creates an exemplary&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Video-2016'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/3027" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3027-Capture.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/3027" target="_blank">
+                    
+                    From San Diego to Guangzhou: The Story of Marketing Tall Buildings
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        19 Oct 2016 &ndash;
+
+		                Presentation at CTBUH 2016 China Conference;
+            
+            
+                            William Murray, Wordsearch
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        One of the keys to attracting buyers and tenants for a contemporary tall building is a succinct marketing strategy and a robust understanding of how to brand real estate&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Video-2015'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2695" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2695-QA3-Ses_125.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2695" target="_blank">
+                    
+                    2015 Awards - Session 3 Q&amp;A
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        12 Nov 2015 &ndash;
+
+		                CTBUH &quot;14th Annual Awards&quot;;
+            
+            
+                            Chair: Antony Wood, CTBUH
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Yoram Eilon, Seinor Vice President, WSP | Parsons Brinckerhoff, Kenneth Lewis, Managing Partner, Skidmore, Owings &amp; Merrill, Hin Kong Poon, Deputy Chief Development&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2691" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2691-Thumb_00.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2691" target="_blank">
+                    
+                    A New Icon for an Evolving City: One World Trade Center, New York City
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        12 Nov 2015 &ndash;
+
+		                CTBUH &quot;14th Annual Awards&quot;;
+            
+            
+                            Yoram Eilon, WSP | Parsons Brinckerhoff; Kenneth Lewis, Skidmore, Owings &amp; Merrill
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Yoram Eilon, Senior Vice President, WSP | Parsons Brinckerhoff, and Kenneth Lewis, Managing Partner, Skidmore, Owings &amp; Merrill, speak at the 14th Annual Best Tall&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2676" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2676-Lewis-Eilon-Int_125.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2676" target="_blank">
+                    
+                    Interview: One World Trade Center
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        12 Nov 2015 &ndash;
+
+		                2015 Awards Ceremony/Symposium Interviews;
+            
+            
+                            Kenneth A. Lewis, Owings &amp; Merrill; &amp; Yoram Eilon, WSP | Parsons Brinckerhoff
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Chicago, IL. Kenneth A. Lewis, Managing Partner, Skidmore, Owings &amp; Merrill, &amp; Yoram Eilon, Senior Vice President, WSP | Parsons Brinckerhoff, are interviewed by Chris&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Video-2014'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2661" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2429-DSC05786.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2661" target="_blank">
+                    
+                    Interview: Douglas Durst
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        6 Nov 2014 &ndash;
+
+		                2014 Awards Ceremony/Symposium Interviews;
+            
+            
+                            Douglas Durst, The Durst Organization
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Douglas Durst is the chairman and a member of the third generation to lead The Durst Organization, one of New York’s oldest and most respected privately held owner-&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2370" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2370-s2-durst_125.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2370" target="_blank">
+                    
+                    Lynn S. Beedle Lifetime Achievement Medal: A Career of Foresight: Douglas Durst
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        6 Nov 2014 &ndash;
+
+		                CTBUH &quot;13th Annual Awards&quot;;
+            
+            
+                            Douglas Durst, The Durst Organization
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Douglas Durst is the chairman and a member of the third generation to lead The Durst Organization, one of New York’s oldest and most respected privately held owner-&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2429" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2429-DSC05786.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2429" target="_blank">
+                    
+                    Monthly Video: Douglas Durst
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        6 Nov 2014 &ndash;
+
+		                Monthly Video Series;
+            
+            
+                            Douglas Durst, The Durst Organization
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Douglas Durst is the chairman and a member of the third generation to lead The Durst Organization, one of New York’s oldest and most respected privately held owner-&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/2132" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2132-TW07_Bass.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/2132" target="_blank">
+                    
+                    Energy-Efficient Elevator Solutions for High-Rise Buildings
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        16 Sep 2014 &ndash;
+
+		                Presentation at CTBUH 2014 Shanghai Conference;
+            
+            
+                            Patrick Bass, ThyssenKrupp
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Maximizing capacity with smart and energy-efficient elevator solutions for the high-rise buildings of the world’s inaugural metropolitan century.
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Video-2012'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/546" target="_blank">
+                
+                <img class='img-rounded' src='//ctbuh.org/Portals/0/Conferences/Shanghai/Speakers/Carbary_100.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/546" target="_blank">
+                    
+                    Advanced Structural Silicone Glazing
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        19 Sep 2012 &ndash;
+
+		                Presentation at CTBUH 2012 9th World Congress, Shanghai;
+            
+            
+                            Lawrence D. Carbary, Industry Scientist; Dow Corning Corporation
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        This presentation discussed an advanced engineering evaluation using nonlinear analysis to improve structural silicone glazing (SSG) design in high performance curtain&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/567" target="_blank">
+                
+                <img class='img-rounded' src='//ctbuh.org/Portals/0/Conferences/Shanghai/Speakers/Murray_100.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/567" target="_blank">
+                    
+                    Selling Tall: The Branding and Marketing of Tall Buildings
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        19 Sep 2012 &ndash;
+
+		                Presentation at CTBUH 2012 9th World Congress, Shanghai;
+            
+            
+                            William Murray Wordsearch
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Tall buildings are important brands – creating both value and recognition for the cities and countries that create them. We have a duty to ensure that the messaging,&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Video-2011'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/video/1463" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/1463-TS21_S01.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/video/1463" target="_blank">
+                    
+                    One World Trade Center: A New Icon Rises at Ground Zero
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Oct 2011 &ndash;
+
+		                Presentation at CTBUH 2011 Seoul Conference;
+            
+            
+                            Nicholas Holt, SOM
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Nicholas Holt from SOM New York presents on re-establishing the culture grid after the effects of September 11th. He speaks on the master plan, how 7 World Trade Center&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                            </div> <!-- /tab-pane -->
+                                </div> <!-- /tab-content -->
+    </div> <!-- /tabble -->
+
+            <p>Browse hundreds of other videos from Council events including conferences and interviews with prominent tall building professionals in the <a href='https://www.ctbuh.org/resources/video-library/' target='_blank'>Video Library</a> <i class='icon-arrow-right'></i></p>
+    </div>
+</div>
+                            </div>
+                        </div>
+                                                </div>
+        
+                    
+            <div class='span6 brick'>
+                <h4>Research Papers</h4>
+
+                                                            <p>
+	<a href="http://global.ctbuh.org/paper/4045" target="_blank"><b>
+	The Global Tall Building Picture: Impact of 2018
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		Jan 2019 &ndash;
+
+		
+
+		CTBUH Journal 2019 Issue I
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://global.ctbuh.org/paper/3791" target="_blank"><b>
+	Using Height-Relative Variables  To Design Tall Buildings
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		Jul 2018 &ndash;
+
+		
+
+		CTBUH Journal 2018 Issue III
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://global.ctbuh.org/paper/3762" target="_blank"><b>
+	Towards Resource-Generative Skyscrapers
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		Jul 2018 &ndash;
+
+		
+
+		International Journal of High-Rise Buildings Volume 7 Number 2
+	</span>
+</p>
+
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+                                    <p>
+                                                    <a class='inline' href='#Research'>
+                                
+                                        More Papers</a> <i
+                                            class='icon-arrow-right'></i>
+                            </a>
+                    </p>
+
+                                            <div class='inline_content'>
+                            <div id='papers'>
+                                <h4>Papers Related to One World Trade Center</h4>
+
+                                <div class='inline_content'>
+    <div id='Research'>
+        <h4>Papers Related to One World Trade Center</h4>
+
+        <div id='Research-tabs' class='tabbable'>
+            
+            <ul class="nav nav-tabs ">
+                                                            <li><a href='#Research-2019' data-toggle='tab'>2019</a></li>
+                                                                                <li><a href='#Research-2018' data-toggle='tab'>2018</a></li>
+                                                                                <li><a href='#Research-2017' data-toggle='tab'>2017</a></li>
+                                                                                <li><a href='#Research-2016' data-toggle='tab'>2016</a></li>
+                                                                                <li><a href='#Research-2015' data-toggle='tab'>2015</a></li>
+                                                                                <li><a href='#Research-2014' data-toggle='tab'>2014</a></li>
+                                                                                <li><a href='#Research-2012' data-toggle='tab'>2012</a></li>
+                                                                                <li><a href='#Research-2011' data-toggle='tab'>2011</a></li>
+                                                                                <li><a href='#Research-2010' data-toggle='tab'>2010</a></li>
+                                                </ul>
+
+            <div class='tab-content'>
+                
+                                                            
+            <div class='tab-pane' id='Research-2019'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/4045" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/4045-Journal2019_IssueI_TBIN-1_thumbnail.JPG' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/4045" target="_blank">
+                    
+                    The Global Tall Building Picture: Impact of 2018
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Jan 2019 &ndash;
+
+		
+            
+                            
+                CTBUH Journal 2019 Issue I;  CTBUH Research
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        In 2018, 143 buildings of 200 meters’ height or greater were completed. This is a slight decrease from 2017’s record-breaking total of 147, and it
+brings the total&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2018'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/3791" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3791-Fig_5_THEOR FRWK 18-04-29.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/3791" target="_blank">
+                    
+                    Using Height-Relative Variables  To Design Tall Buildings
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Jul 2018 &ndash;
+
+		
+            
+                            
+                CTBUH Journal 2018 Issue III;  John Jory, Queensland University of Technology
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        This paper investigates height-variable phenomena in the urban context, and their relevance to the design and performance of tall buildings. It proposes a design approach&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/3762" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3762-article7.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/3762" target="_blank">
+                    
+                    Towards Resource-Generative Skyscrapers
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Jul 2018 &ndash;
+
+		
+            
+                            
+                International Journal of High-Rise Buildings Volume 7 Number 2;  Mohamed Imam &amp; Branko Kolarevic, University of Calgary
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Rapid urbanization, resource depletion, and limited land are further increasing the need for skyscrapers in city centers; therefore, it is imperative to enhance tall&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/3643" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3643-TBIN_125.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/3643" target="_blank">
+                    
+                    The Global Tall Building Picture: Impact of 2017
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Feb 2018 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2018 Issue I;  CTBUH Staff, CTBUH
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        In 2017, 144 buildings of 200 meters’ height or greater were completed. This is the fourth record-breaking year in a row, and it brings the total number of 200-meter-plus&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2017'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/3378" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3378-women.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/3378" target="_blank">
+                    
+                    Ten Significant Tall Buildings, and the Significant Women Behind Them
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        8 Aug 2017 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2017 Issue III;  Leading Women in Tall Buildings
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Recently, there has been a growing and overdue recognition in the architecture discipline that women are under-represented, not just in terms of leadership positions held&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2016'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/2877" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2877-Pg184_ParakhThumb.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/2877" target="_blank">
+                    
+                    The Space Between: Urban Spaces Surrounding Tall Buildings
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        17 Oct 2016 &ndash;
+
+		
+            
+                            
+                Cities to Megacities: Shaping Dense Vertical Urbanism;  James Parakh, City of Toronto Planning Division
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        This paper is intended to introduce the upcoming CTBUH technical guide titled “The Space Between,” which investigates the importance of publicly accessible spaces&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/2999" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2999-1.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/2999" target="_blank">
+                    
+                    Towards Resource Generative Skyscrapers
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        17 Oct 2016 &ndash;
+
+		
+            
+                            
+                Cities to Megacities: Shaping Dense Vertical Urbanism;  Mohamed Imam &amp; Branko Kolarevic, University of Calgary
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Rapid urbanization, resource depletion, and limited land are further increasing the need for skyscrapers in city centers; therefore, it is imperative to enhance tall&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2015'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/2440" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2440-Rahimian-Paper.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/2440" target="_blank">
+                    
+                    The Rise of One World Trade Center
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        26 Oct 2015 &ndash;
+
+		
+            
+                            
+                Global Interchanges: Resurgence of the Skyscraper City;  Ahmad Rahimian &amp; Yoram Eilon, WSP Group
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        One World Trade Center (1WTC) totaling 3.5 mil square feet of area is the tallest of the four buildings planned as part of the World Trade Center Reconstruction at Lower&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://www.ctbuh.org/Publications/CTBUHJournal/InNumbers/TBINNewYork/tabid/7047/language/en-GB/Default.aspx" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2544-TBIN_NYC.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://www.ctbuh.org/Publications/CTBUHJournal/InNumbers/TBINNewYork/tabid/7047/language/en-GB/Default.aspx" target="_blank">
+                    
+                    New York: The Ultimate Skyscraper Laboratory
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Oct 2015 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2015 Issue IV;  CTBUH Research
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        A timeline of skyscraper completions in New York uncannily resembles the boom and bust cycles of the United States in the 20th and early 21st centuries. The most active&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/2548" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2548-EmpireState-OWTC_(c)AricAustermann.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/2548" target="_blank">
+                    
+                    Perspectives on the Skyscraper City
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Oct 2015 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2015 Issue IV;  New York 2015 Conference Special
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        To commemorate the CTBUH 2015 International Conference, some of the most prominent voices in the New York tall building industry today – all of whom are speaking at the&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://www.ctbuh.org/Publications/CTBUHJournal/InNumbers/TBINObservationDecks/tabid/7043/language/en-GB/Default.aspx" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/2382-Journal2015_IssueIII_TBIN-2.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://www.ctbuh.org/Publications/CTBUHJournal/InNumbers/TBINObservationDecks/tabid/7043/language/en-GB/Default.aspx" target="_blank">
+                    
+                    World’s Highest Observation Decks
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Aug 2015 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2015 Issue III;  CTBUH Research
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Perhaps no element of a tall building is more closely related to the pure pleasure of standing high in the sky and taking in the view of one’s surroundings than&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2014'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://www.skyscrapercenter.com/year-in-review/2014" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/1972-TBIN_2014Review.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://www.skyscrapercenter.com/year-in-review/2014" target="_blank">
+                    
+                    Year in Review: Tall Trends of 2014
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Dec 2014 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2015 Issue I;  Daniel Safarik, Antony Wood, Marty Carver &amp; Marshall Gerometta, CTBUH
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        An All-Time Record 97 Buildings of 200 Meters or Higher Completed in 2014 and 2014 showed further shifts towards Asia, and also surprising developments in building&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/3674" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3674-one-world-trade-center_125.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/3674" target="_blank">
+                    
+                    Debating Tall: Antennas vs. Spires
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        28 Jan 2014 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2014 Issue I;  Larry Silverstein, Siliverstein Properties Inc.; Dario Trabucco, IUAV University of Venice
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        The CTBUH’s Height Committee ratified the architectural height of One World Trade Center last November, touching off massive media coverage and opening up complicated&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2012'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/3682" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/3682-1WTC_125.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/3682" target="_blank">
+                    
+                    Debating Tall: A Supertall Future in the US?
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        27 Jan 2012 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2012 Issue I;  Adrian Smith, Adrian Smith + Gordon Gill Architecture; Paul Beitler, Beitler Real Estate Services LLC
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        In 1990, only 11 buildings in the world could be counted as a “supertall” (defined as a building over 300 meters tall), and all but one could be found in the United&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/42" target="_blank">
+                
+                <img class='img-rounded' src='//www.ctbuh.org/Portals/0/High-rise%20Resources/Height%20&amp;%20Statistics/Tallest20in2020.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/42" target="_blank">
+                    
+                    The Tallest 20 in 2020: Entering the Era of the Megatall
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        18 Jan 2012 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2012 Issue I;  Nathaniel Hollister &amp; Antony Wood, CTBUH
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Within this decade we will likely witness not only the world’s first kilometer-tall building, but also the completion of a significant number of buildings over 600 meters&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2011'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/24" target="_blank">
+                
+                <img class='img-rounded' src='//www.ctbuh.org/Portals/0/Publications/CTBUH_Journal/Case%20Studies/Journal2011_IssueIII_casestudy_sm_100x100.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/24" target="_blank">
+                    
+                    Case Study: One World Trade Center
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Oct 2011 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2011 Issue III;  Kenneth Lewis &amp; Nicholas Holt, SOM
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        The world knows what happened in Lower Manhattan on September 11, 2001. The twin towers of the World Trade Center and several other buildings were damaged or destroyed,&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://www.ctbuh.org/LinkClick.aspx?fileticket=eb2Me8uNw3A%3d&amp;language=en-GB" target="_blank">
+                
+                <img class='img-rounded' src='//www.ctbuh.org/Portals/0/Publications/CTBUH_Journal/Tall%20Buildings%20in%20Numbers/Journal2011_IssueIII_Numbers_sm_100x100.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://www.ctbuh.org/LinkClick.aspx?fileticket=eb2Me8uNw3A%3d&amp;language=en-GB" target="_blank">
+                    
+                    New York City Scrapers
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Aug 2011 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2011 Issue III;  Nathaniel Hollister, Jan Klerks &amp; Antony Wood, CTBUH 
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        New York’s dramatic skyline, over a century in the making, has for years been the envy of cities around the world. From the very birth of the tall building typology, New&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/1018" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/1018-002.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/1018" target="_blank">
+                    
+                    Planning The World Trade Center: 40 Years Apart
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Aug 2011 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2011 Issue III;  Jan Klerks, CTBUH
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Once completed the new World Trade Center, currently under construction, will grace New York well over 40 years since the completion of the original Twin Towers that&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/1015" target="_blank">
+                
+                <img class='img-rounded' src='//global.ctbuh.org/img/resources/1015-029.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/1015" target="_blank">
+                    
+                    Revitalizing Lower Manhattan: World Trade Center in Context
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Aug 2011 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2011 Issue III;  Jan Klerks, CTBUH
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Almost 10 years after the destruction of the Twin Towers, the reconstruction of the World Trade Center site is in full swing. One World Trade Center, which is discussed&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                                                                                    </div> <!-- /tab-pane -->
+            
+            <div class='tab-pane' id='Research-2010'>
+                
+                
+                
+                                    <div class='row inner-section'>
+    <div class='span1'>
+                    <a href="http://global.ctbuh.org/paper/292" target="_blank">
+                
+                <img class='img-rounded' src='//ctbuh.org/Portals/0/Feature%20Archive/Tech%20Paper/2012/tech_thumb.jpg' border='0'/>
+
+                            </a>
+            </div> <!-- /span1 -->
+
+    <div class='span7'>
+        <b>
+                            <a href="http://global.ctbuh.org/paper/292" target="_blank">
+                    
+                    International Applications of Elevators for Fire Service Access and Occupant Egress in Fires
+
+                                    </a>
+                    </b><br/>
+
+        <span class='muted'>
+		<small>
+		
+        Aug 2010 &ndash;
+
+		
+            
+                            
+                CTBUH Journal, 2010 Issue III;  Richard W. Bukowski, RJA
+            		</small>
+		</span>
+
+        <br/>
+
+        
+        Despite the absence of technical standards, tall buildings worldwide are incorporating elevators for occupant evacuation to achieve significant reductions in total&amp;hellip;
+    </div> <!-- /span7 -->
+</div> <!-- /row -->
+                
+                
+                            </div> <!-- /tab-pane -->
+                                </div> <!-- /tab-content -->
+    </div> <!-- /tabble -->
+
+            <p>Browse hundreds of other papers published by CTBUH members on a range of multi-disciplinary subjects in the <a href='https://www.ctbuh.org/resources/research-papers/' target='_blank'>Research Papers Library</a> <i class='icon-arrow-right'></i></p>
+    </div>
+</div>
+                            </div>
+                        </div>
+                                                </div>
+        
+                    
+            <div class='span6 brick'>
+                <h4>CTBUH Awards</h4>
+
+                                                            <p>
+	
+	<a href="http://awards.ctbuh.org/media/ctbuh-names-best-tall-buildings-for-2015/" target="_blank"><b>
+	Best Tall Building Americas
+	2015
+
+			Winner
+		</b></a>
+	<br />
+
+	<span class='muted'>
+		CTBUH Awards 2015
+	</span>
+</p>
+
+                                                                        </div>
+        
+        
+    </div>
+    <!-- /modules -->
+
+    <div class='row section-container'>
+        <div class="span12">
+            <br>
+            To submit more information or donate images for this project, please use our <a
+                    href="/portal/submit?building_id=98">submission portal</a>.<br><br>
+        </div>
+    </div>
+
+            <script type='text/javascript'>
+            var buildingId = 98;
+        </script>
+
+        <script type='text/javascript' src='/js/common.buildings.js'></script>
+    
+</div> <!-- /container -->
+
+<div id='footer' class='container'>
+    <div class='row'>
+        <!--<div class='span2 pull-left'>
+            <form class='form-inline' method='get' action='https://www.ctbuh.org/AboutCTBUH/SearchCTBUHWebsite/tabid/37/language/en-US/Default.aspx' target='_blank'>
+                <input class='input-medium' type='text' name='q' placeholder="Search CTBUH Websites" />
+            </form>
+        </div>-->
+
+        <div class='span6 pull-left footer-text'>
+            &nbsp;
+            <a href='https://www.ctbuh.org' target='_blank'>CTBUH Home</a>
+            &bull; <a href='https://ctbuh.org/newsletter' target='_blank'>CTBUH Mailing List</a>
+            &bull; <a href='/about'>About the Database</a>
+            &bull; <a href="/cdn-cgi/l/email-protection#b9cad2c0cadacbd8c9dccbdadcd7cddccbf9dacddbccd197d6cbde">Contact Us</a>
+        </div>
+
+        <div class='span4 pull-right text-right footer-text'>&copy; 2019 <a href='https://www.ctbuh.org' target='_blank'>Council on Tall Buildings and Urban Habitat</a></div>
+    </div>
+</div>
+
+<div id='print-message' class='container'>
+    <div class='row'>
+        <div class='span12'>
+            <p>Please enable printing background colors and images to preserve the full website experience when printing.</p>
+
+            <p>In Internet Explorer, click Print - Page setup and check the <i>Print Background Colors and Images</i> box.<br />
+            In Google Chrome, click Print then check the <i>Background colors and images</i> box under the Options section.<br />
+            In Mozilla Firefox, click File - Page Setup then check the <i>Print Background (colors & images)</i> box.</p>
+        </div>
+    </div>
+</div>
+
+
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/js/bootstrap.min.js"></script>
+<script src="/js/common.js"></script>
+
+<script src="/js/leaflet.js"></script>
+<script src="/js/leaflet.markercluster.js"></script>
+
+<script src="//oss.maxcdn.com/jquery.trip.js/3.1.6/trip.min.js"></script>
+<script src="/js/jquery.typeahead.min.js"></script>
+<script src="/js/jquery.colorbox-min.js"></script>
+<script src="/js/jquery.dataTables.min.js"></script>
+<script src="/js/jquery.dataTables.tableTools.min.js"></script>
+<script src="/js/jquery.nanoscroller.min.js"></script>
+<script src="/js/jquery.maphilight.min.js"></script>
+<script src="/js/jquery.trunk8.min.js"></script>
+<script src="//cdn.jsdelivr.net/qtip2/2.2.1/jquery.qtip.min.js"></script>
+
+<script src="//rum-static.pingdom.net/pa-5d2e370f14cfaa000800014b.js" async></script>
+
+<script type="text/javascript">
+    var _paq = _paq || [];
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function () {
+        var u = "//analytics.ctbuh.org/";
+        _paq.push(['setTrackerUrl', u + 'piwik.php']);
+        _paq.push(['setSiteId', 1]);
+        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+        g.type = 'text/javascript';
+        g.async = true;
+        g.defer = true;
+        g.src = u + 'piwik.js';
+        s.parentNode.insertBefore(g, s);
+    })();
+</script>
+<noscript><p><img src="//analytics.ctbuh.org/piwik.php?idsite=1" style="border:0;" alt=""/></p></noscript>
+
+</body>
+</html>

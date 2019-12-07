@@ -1,0 +1,1222 @@
+<!doctype html>
+
+<html>
+<head>
+    <title>
+                    Central Park Tower -
+        
+        The Skyscraper Center
+    </title>
+
+    <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico">
+
+    <link href="/css/bootstrap.min.css" rel="stylesheet">
+    <link href="/css/leaflet.css" rel="stylesheet">
+    <link href="/ammap/ammap.css" rel="stylesheet">
+    <link href="/css/jquery.dataTables.css" rel="stylesheet">
+    <link href="//cdn.jsdelivr.net/qtip2/2.2.1/jquery.qtip.min.css" rel="stylesheet">
+    <link href="//oss.maxcdn.com/jquery.trip.js/3.1.6/trip.min.css" rel="stylesheet">
+
+    <link href="/css/style.css?ver=20160407" rel="stylesheet">
+
+    <script src="//code.jquery.com/jquery-1.9.1.js"></script>
+
+    <script src="//cdn.jsdelivr.net/algoliasearch/3/algoliasearch.min.js"></script>
+    <script src="//cdn.jsdelivr.net/algoliasearch.helper/2.0.0/algoliasearch.helper.min.js"></script>
+
+    <script src="/js/hogan.min.js"></script>
+
+    <meta name="ahrefs-site-verification" content="f4a7c1f487f026a914b62841800a2ba00d7895ada65dc7fbe022594f59d86217">
+    <meta name="csrf-token" content="UofOw7Nr8bzvYkQRfcuivfwpClRuvUR44ptpm7z5">
+
+    <style>
+        .blinking {
+            animation: blinkingText 0.6s infinite;
+        }
+
+        @keyframes  blinkingText {
+            0% {
+                color: #ffccff;
+            }
+            /*
+            49% {
+                color: transparent;
+            }
+            50% {
+                color: transparent;
+            }
+            99% {
+                color: transparent;
+            }
+            */
+            100% {
+                color: #e600e6;
+            }
+        }
+
+        .well {
+            background-color: rgb(108, 160, 214);
+            border: rgb(108, 160, 214);
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+
+<div id='header'>
+    <div class='container'>
+        <div id='header-top' class='row'>
+            <div class='span6 pull-left'>
+                <a href='/' style="
+                min-height: 59px;
+                min-width: 400px;
+                height: 59px;
+                width: 400px;
+                ">
+                    <img src="/img/Skyscraper_Center_Logo.png" alt='The Skyscraper Center' width='400' height='59'
+                         border='0'/>
+                </a>
+            </div>
+
+            <div id="header-search" class="span6  text-right">
+                <a href='http://www.ctbuh.org' target='_blank'>
+                    <img src='/img/TheSC_skyline_logo.png' alt='The Council on Tall Buildings and Urban Habitat'
+                         width='275' height='23' border='0' style="margin-top: -36px; "/>
+                </a>
+            </div>
+        </div>
+
+        <div class='row'>
+            <div id='header-nav' class='span10 pull-left'>
+                <ul id='menu' class="nav nav-pills">
+                    <li class=&#039;active&#039;><a
+                                href='/buildings'>Buildings</a></li>
+                    
+                    <li ><a
+                                href='/cities'>Cities</a></li>
+                    <li ><a
+                                href='/companies'>Companies</a></li>
+                    <li ><a
+                                href='/quick-lists'>Create Lists</a></li>
+                    <li ><a
+                                href='/compare-data'>Compare Data</a></li>
+                    
+                    
+                    
+                    
+
+                    <li>
+                                                    
+                            <a href='/locale/cn'> Chinese/中文</a>
+                                            </li>
+                </ul>
+            </div>
+
+            <div class='span2 pull-right text-right'>
+                
+                                    <div id='header-search' class=' pull-right text-right'>
+    <form class='form-inline custom-search-form' action='/search' method='get' style="margin: -3px!important;">
+
+    <input type='text' class='input-xlarge typeahead' name='q' id='search-input' autocomplete='off' spellcheck='false' placeholder="Search Buildings, Companies & Locations" style="bottom: 4px;padding:2px !important; width:270px !important; height: 15px;" />
+
+    </form>
+
+    <script type='text/javascript'>
+    $(document).ready(function() {
+        var algolia = algoliasearch('VQAAT9TYC4', 'eec96cb29df3072743c09f1cbb793281');
+        var algoliaCompanies = algolia.initIndex('SC_Companies');
+        var algoliaBuildings = algolia.initIndex('SC_Buildings');
+        var algoliaComplexes = algolia.initIndex('SC_Complexes');
+		
+		
+		var algoliaCities = algolia.initIndex('v2_cities');
+		var algoliaCountries = algolia.initIndex('v2_countries');
+
+        var templateCompany = Hogan.compile('<div class="company"><a href="/company/{{ id }}"><span style="display: block">{{{ _highlightResult.name.value }}}</span></a></div>');
+        var templateBuilding = Hogan.compile('<div class="building"><a href="{{ url }}"><span style="display: block">{{{ nameToUse }}}{{{ cityToUse }}}</span></a></div>');
+        var templateComplex = Hogan.compile('<div class="complex"><a href="{{ url }}"><span style="display: block">{{{ nameToUse }}}{{{ cityToUse }}}</span></a></div>');
+
+		var templateCity = Hogan.compile('<div class="city"><a href="/city/{{ url_name }}"><span style="display: block">{{ name }}</span></a></div>');
+		var templateCountry = Hogan.compile('<div class="country"><a href="/country/{{ url_name }}"><span style="display: block">{{ name }}</span></a></div>');
+		
+        var typeaheadCtrl = $('#search-input').typeahead({
+            minLength: 3,
+            hint: false,
+            highlight: false
+        }, [
+        {
+            source: algoliaBuildings.ttAdapter({ hitsPerPage: 4, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Buildings</div>",
+                suggestion: function(hit) {
+                    var cityToUse = '';
+                    var nameToUse = hit._highlightResult.name.value;
+
+                    if (hit.city != '') {
+                      cityToUse = ' <small>(' + hit.city + ')</small>';
+                    }
+
+                    hit.cityToUse = cityToUse;
+                    hit.nameToUse = nameToUse;
+
+                    return templateBuilding.render(hit);
+                }
+            }
+        },
+        {
+            source: algoliaComplexes.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Building Complexes</div>",
+                suggestion: function(hit) {
+                    var cityToUse = '';
+                    var nameToUse = hit._highlightResult.name.value;
+
+                    if (hit.city != '') {
+                      cityToUse = ' <small>(' + hit.city + ')</small>';
+                    }
+
+                    hit.cityToUse = cityToUse;
+                    hit.nameToUse = nameToUse;
+
+                    return templateComplex.render(hit);
+                }
+            }
+        },
+        {
+            source: algoliaCompanies.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Companies</div>",
+                suggestion: function(hit) { 
+					hit.url = '/company/' + hit.id;
+				return templateCompany.render(hit); 
+				
+				},
+            }
+        },
+		// add CITY + COUNTRY
+		{
+			source:  algoliaCities.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Cities</div>",
+                suggestion: function(hit) {
+					if(hit.slug){
+						hit.url_name = hit.slug;
+					} else {
+						hit.url_name = hit.name.replace(/ /g, '-').toLowerCase();
+					}
+					
+					return templateCity.render(hit);
+				},
+            }
+		},
+		{
+			source:  algoliaCountries.ttAdapter({ hitsPerPage: 3, replaceSynonymsInHighlight: false, typoTolerance: 'strict' }),
+            displayKey: 'name',
+            templates: {
+                header: "<div class='category'>Countries</div>",
+                suggestion: function(hit) {
+					hit.url_name = hit.name.replace(/ /g, '-').toLowerCase();
+					return templateCountry.render(hit);
+				},
+            }
+		}
+			// this is the end
+        ]);
+
+        typeaheadCtrl.on('typeahead:selected', function(evt, data) {
+			if (false && typeof data.url === "undefined"){
+				alert(JSON.stringify(data));
+			} else {
+				window.location = 'http://' + window.location.host + data.url;
+			}
+        });
+
+        // Append view all link
+        $('.tt-dropdown-menu').append('<div class="all-results"><a id="view-all-link" href="/search">View all results</a>');
+
+        $('#view-all-link').on('click', function(e) {
+            e.preventDefault();
+            window.location = 'http://' + window.location.host + '/search#q=' + $('#search-input').val();
+        });
+
+        // Append Algolia credit
+        $('.tt-dropdown-menu').append('<div class="powered-by-algoliasearch"><small><em>Powered by</em></small><a href="http://www.algolia.com/?utm_source=skyscrapercenter&amp;utm_medium=link&amp;utm_campaign=skyscrapercenter_search" title="Algolia Realtime Search" target="_blank"><img src="/img/algolia.png" alt="Algolia Realtime Search" width="48" height="15"></a></div>');
+    });
+    </script>
+</div>                            </div>
+        </div>
+    </div> <!-- /container -->
+</div>
+
+<div class='container'>
+    
+    
+    
+    
+    <div class='row section-container'>
+        <div class='span12'>
+            <h3>
+                Central Park Tower
+
+                                    <small>
+                        <a
+        id="btn-my-ctbuh-save"
+        class='btn btn-mini btn-in-heading disabled'
+        data-source-id="14269"
+        data-heading="Central Park Tower"
+        data-image="https://images.skyscrapercenter.com/building/centralparktower_rendering-lookingup_(c)adrian__smith__and__gordon__gill__architecture.jpg"
+        data-url="https://www.skyscrapercenter.com/building/central-park-tower/14269"
+        href='#'
+    >
+        <i class="icon-bookmark"></i>
+        Save to My CTBUH
+    </a>
+
+    <a
+        id="btn-my-ctbuh-view"
+        class='btn btn-mini btn-in-heading hidden'
+        href='https://www.ctbuh.org/my-ctbuh/building'
+    >
+        <i class="icon-bookmark"></i>
+        View in My CTBUH
+    </a>
+
+                        <a
+                            class='btn btn-mini btn-in-heading'
+                            href='/pdf/building/14269'
+                            target='_blank'
+                        >
+                            <i class="icon-download"></i>
+                            Download PDF
+                        </a>
+                    </small>
+                            </h3>
+
+                    </div>
+    </div>
+
+    
+    <!--
+common.buildingAndComplexImages
+-->
+
+    <div class='row section-container'>
+                    <div class='span4'>
+		
+		<a class='building-image' href="//images.skyscrapercenter.com/building/centralparktower_rendering-lookingup_(c)adrian__smith__and__gordon__gill__architecture.jpg" title="<small>&amp;copy; Adrian Smith + Gordon Gill Architecture  </small>">
+		<img class='img-rounded' src="//images.skyscrapercenter.com/thumbs/61134_300x415_3502_2258.jpg" width='300' height='415' border='0' alt="" />
+		</a>
+
+		<br />
+
+		<span class='muted'><small>Click an image to view larger version.</small></span>
+	</div>
+
+	<div class='span2'>
+		<div class='nano' id='building-thumbnails-container'>
+							<div class='nano-content' id='building-thumbnails'>
+
+					
+											
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/lester-ali_7355.jpg" title="<small>&amp;copy; Lester Ali &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/lester-ali_7355.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/78851_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/john-w-cahill_1927.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/john-w-cahill_1927.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="http://images.skyscrapercenter.com/thumbs/83443_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/john-w-cahill_901.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/john-w-cahill_901.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/78470_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/john-w-cahill_4240.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/john-w-cahill_4240.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/78468_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/john-w-cahill_7162.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/john-w-cahill_7162.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/78467_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/john-w-cahill_5141.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/john-w-cahill_5141.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/78469_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/john-w-cahill_2861.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/john-w-cahill_2861.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/78466_80x80.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower.jpg" title="<small>&amp;copy; Lester Ali &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/72955_80x80_6749.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_buter-v-adams2.jpg" title="<small>&amp;copy; Buter V. Adams </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/70675_80x80_3516_4099.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_buter-v-adams1.jpg" title="<small>&amp;copy; Buter V. Adams </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/70674_80x80_2868.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_marshall-gerometta2.jpg" title="<small>&amp;copy; Marshall Gerometta </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/66364_80x80_9772_7525.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_marshall-gerometta1.jpg" title="<small>&amp;copy; Marshall Gerometta </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/66363_80x80_5007_6405.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_marshall-gerometta3.jpg" title="<small>&amp;copy; Marshall Gerometta </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/66365_80x80_5269.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_marshall-gerometta5.jpg" title="<small>&amp;copy; Marshall Gerometta </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/66367_80x80_7619_9295.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_marshall-gerometta4.jpg" title="<small>&amp;copy; Marshall Gerometta </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/66366_80x80_8635_2869.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill11.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill11.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/61024_80x80_4786_7201.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill9.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill9.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/61023_80x80_4265_2152.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill10.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill10.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/38547_80x80_9549_4658.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill7.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill7.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/38749_80x80_7601_4139.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill8.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill8.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/21654_80x80_2236_1874.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill3.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill3.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/15938_80x80_1815_6892.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill4.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill4.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/21933_80x80_7601_7129.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill5.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill5.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/1684_80x80_9241_6788.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill1.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill1.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/56204_80x80_9194_9039.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill2.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill2.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/4048_80x80_8512_2345.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill6.jpg" title="<small>&amp;copy; John W. Cahill &amp;bull; &lt;a href=&#039;//images.skyscrapercenter.com/building/central-park-tower_john-w-cahill6.jpg&#039;&gt;Download&lt;/a&gt;</small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/15374_80x80_187_7556.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/CentralParkTower_Rendering-Detail_(c)Adrian__Smith__and__Gordon__Gill__Architecture.jpg" title="<small>&amp;copy; Adrian Smith + Gordon Gill Architecture  </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/1458_80x80_4478_5324.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/nordstromtower-penthouse_(c)asgg.jpg" title="<small>&amp;copy; Adrian Smith + Gordon Gill Architecture </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/30331_80x80_9754_220.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/CentralParkTower_Rendering-Context_(c)Adrian__Smith__and__Gordon__Gill__Architecture.jpg" title="<small>&amp;copy; Adrian Smith + Gordon Gill Architecture  </small>">
+
+							<img  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/310_80x80_3626_8722.jpg" border='0' alt="" />
+
+							</a>
+						
+																								
+							<a class='building-image' href="//images.skyscrapercenter.com/building/centralparktower_rendering-base_(c)adrian__smith__and__gordon__gill__architecture.jpg" title="<small>&amp;copy; Adrian Smith + Gordon Gill Architecture  </small>">
+
+							<img  style='margin-bottom: 1em'  class='img-rounded img-spaced building-thumbnail' src="//images.skyscrapercenter.com/thumbs/35809_80x80_1461_6377.jpg" border='0' alt="" />
+
+							</a>
+						
+															</div>
+
+				<div class='fadeout'></div>
+					</div>
+	</div>
+        
+        <div class='span6' id='figures-section'>
+                            <span class='figures-container' style="top: 26px">
+			<span id='height-occupied-left' style='padding-top: 54px'>
+				<a class='definition-trigger' href='/definition/height-occupied'>Height: Occupied</a><br />
+				<span class='muted'>
+					442 m / 1,450 ft
+
+									</span>
+			</span>
+
+			<span id='height-occupied-right'>
+				&nbsp;
+			</span>
+		</span>
+	
+			<span class='figures-container' id='height-architecture-container' style="top: 0px">
+			<span id='height-architecture-left'>
+									<a class='definition-trigger' href='/definition/height-tip'>Height: To Tip</a><br />
+					<span class='muted' style='display: inline-block; margin-bottom: 2px'>
+						472.4 m / 1,550 ft
+
+											</span><br />
+				
+				<a class='definition-trigger' href='/definition/height-architectural'>Height: Architectural</a><br />
+				<span class='muted'>
+					472.4 m / 1,550 ft
+
+									</span>
+			</span>
+
+			 <span id='height-architecture-right'>
+			 	&nbsp;
+			 </span>
+		</span>
+	
+	<div class='figures-container' id='building-image-container'>
+		<img src='/img/building-outlines/Nordstrom-Tower.png' alt="Central Park Tower Outline" />
+	</div>
+
+	 
+
+<span id='table-figures-container' class='figures-container-right' >
+	<table id='table-figures'>
+		
+		
+		
+					<tr><td><a class='definition-trigger' href='/definition/floors-above'>Floors Above Ground</a><br /><span class='muted'>98</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/floors-below'>Floors Below Ground</a><br /><span class='muted'>3</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/elevators'># of Elevators</a><br /><span class='muted'>11</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/elevator-speed'>Top Elevator Speed</a><br /><span class='muted'>10.16 m/s</span></td></tr>
+		
+					<tr><td><a class='definition-trigger' href='/definition/tower-gfa'>Tower GFA</a><br /><span class='muted'>119,409 m&sup2; / 1,285,308 ft&sup2;</span></td></tr>
+		
+		
+					<tr><td><a class='definition-trigger' href='/definition/apartments'># of Apartments</a><br /><span class='muted'>179</span></td></tr>
+		
+		
+			</table>
+</span>
+                    </div>
+            </div>
+
+    <!-- start sections -->
+    <div class='row section-container'>
+        
+                    <div class='span6 brick'>
+                <h4>Facts</h4>
+
+                <table class='table table-condensed table-building-data'>
+                    <tbody>
+                    <tr>
+		<td width='150'><a class='definition-trigger' href='/definition/official-name'>Official Name</a></td>
+		<td>Central Park Tower</td>
+	</tr>
+
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/other-names'>Other Names</a></td>
+			<td>217 West 57th Street, 225 West 57th Street, Nordstrom Tower</td>
+		</tr>
+	
+	<tr>
+		<td><a class='definition-trigger' href='/definition/structure-type'>Structure Type</a></td>
+		<td>Building</td>
+	</tr>
+
+	<tr>
+		<td><a class='definition-trigger' href='/definition/status'>Status</a></td>
+		<td>Architecturally Topped Out</td>
+	</tr>
+
+			<tr>
+			<td><a class='definition-trigger' href='/definition/country'>Country</a></td>
+			<td><a href='/country/united-states'>United States</a></td>
+		</tr>
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/city'>City</a></td>
+			<td><a href='/city/new-york-city'>New York City</a></td>
+		</tr>
+	
+			
+		<tr>
+			<td>
+									Street Address &amp; Map
+							</td>
+
+			<td>
+									<a id='map-trigger' href='/map/building/14269'>217 West 57th Street</a>
+							</td>
+		</tr>
+	
+			<tr>
+			<td>Postal Code</td>
+			<td>10019</td>
+		</tr>
+	
+			<tr>
+			<td>
+				<a class='definition-trigger' href='/definition/function'>
+											Building Function
+									</a>
+			</td>
+			<td>residential</td>
+		</tr>
+	
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/material'>Structural Material</a></td>
+			<td>concrete
+
+			
+			</td>
+		</tr>
+	
+	
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/proposed'>Proposed</a></td>
+			<td>2010</td>
+		</tr>
+	
+			<tr>
+			<td><a class='definition-trigger' href='/definition/construction'>Construction Start</a></td>
+			<td>2014</td>
+		</tr>
+	
+			<tr>
+			<td>
+				<a class='definition-trigger' href='/definition/completion'>Completion</a>
+			</td>
+			<td>2020</td>
+		</tr>
+	
+	
+	
+	
+	
+	                                        </tbody>
+                </table>
+            </div>
+        
+        
+                    <div class='span6 brick'>
+                                    <h4>Companies Involved</h4>
+                
+                <table class='table table-condensed table-building-data'>
+<tbody>
+	
+			
+		
+					<tr>
+				<td width='150'>
+											Developer
+									</td>
+				<td>
+											
+													
+															<a href='/company/462'>Extell Development Company</a>;
+							
+																				
+															SMI USA
+							
+																						</td>
+			</tr>
+		
+					
+		
+					<tr>
+				<td colspan='2'>
+											Architect
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/designarch'>Design</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/8'>Adrian Smith + Gordon Gill Architecture</a>;
+							
+																				
+															James Carpenter Design Associates
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/recordarch'>Architect of Record</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/23674'>AAI Architects, P.C.</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td colspan='2'>
+											Structural Engineer
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/designengi'>Design</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/631'>WSP Group</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td colspan='2'>
+											MEP Engineer
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/designengi'>Design</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/2248'>AKF Group LLC</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td width='150'>
+											<a class='definition-trigger' href='/definition/contractor'>Main Contractor</a>
+									</td>
+				<td>
+											
+													
+															<a href='/company/1683'>Bovis Lend Lease</a>
+							
+																						</td>
+			</tr>
+		
+					
+		
+					<tr>
+				<td colspan='2'>
+											<a class='definition-trigger' href='/definition/consultant'>Other Consultant</a>
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Civil
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/2094'>Langan Engineering</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Energy Concept
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/2248'>AKF Group LLC</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Environmental
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/2094'>Langan Engineering</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													<a class='definition-trigger' href='/definition/facade'>Fa&ccedil;ade</a>
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/4986'>Permasteelisa Group</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Fire
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/2248'>AKF Group LLC</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Geotechnical
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/2094'>Langan Engineering</a>
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Interiors
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															Rottet Studio
+							
+																		</td>
+				</tr>
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Marketing
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/6024'>Extell Marketing Group</a>;
+							
+																				
+															<a href='/company/8550'>Wordsearch</a>
+							
+																		</td>
+				</tr>
+								
+		
+					<tr>
+				<td colspan='2'>
+											<a class='definition-trigger' href='/definition/supplier'>Material Supplier</a>
+									</td>
+			</tr>
+
+							
+				<tr>
+					<td width='150'>
+						<span class='subcategory'>&bull;
+
+													Steel
+						
+						</span>
+					</td>
+					<td>
+						
+													
+															<a href='/company/7007'>ArcelorMittal</a>
+							
+																		</td>
+				</tr>
+						</tbody>
+</table>
+
+                            </div>
+        
+        
+        
+                    <a id='Resources'></a>
+        
+                    
+            <div class='span6 brick'>
+                <h4>CTBUH Initiatives</h4>
+
+                                                            <p>
+    
+	<b>The Current State of Slender Buildings in NYC</b>
+
+	
+    <br/>
+
+    
+    <span class='muted'>
+
+			30 Jul 2015
+		
+    &ndash;
+
+	Event
+
+                    Report
+        	</span>
+</p>
+
+                                                            
+                            </div>
+        
+        
+                    
+            <div class='span6 brick'>
+                <h4>Videos</h4>
+
+                                                            <p>
+	<a href="http://global.ctbuh.org/video/3339" target="_blank"><b>
+	Singularly Slender: Sky Living in New York, Hong Kong, and Elsewhere
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		20 Oct 2016 &ndash;
+
+		
+
+		Carol Willis, The Skyscraper Museum
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://global.ctbuh.org/video/3027" target="_blank"><b>
+	From San Diego to Guangzhou: The Story of Marketing Tall Buildings
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		19 Oct 2016 &ndash;
+
+		
+
+		William Murray, Wordsearch
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://global.ctbuh.org/video/2775" target="_blank"><b>
+	Developing Tall in the New York Context
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		26 Oct 2015 &ndash;
+
+		
+
+		Gary Barnett, Extell Development Corporation; Ric Clark, Brookfield Properties; Joseph Moinian, Moinian Group &amp; Larry Silverstein, Silverstein Properties
+	</span>
+</p>
+
+                                                            
+                            </div>
+        
+                    
+            <div class='span6 brick'>
+                <h4>Research Papers</h4>
+
+                                                            <p>
+	<a href="http://global.ctbuh.org/paper/2926" target="_blank"><b>
+	Singularly Slender: Sky Living in New York, Hong Kong, and Elsewhere
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		17 Oct 2016 &ndash;
+
+		
+
+		Cities to Megacities: Shaping Dense Vertical Urbanism
+	</span>
+</p>
+
+                                                                                                        <p>
+	<a href="http://www.ctbuh.org/Publications/CTBUHJournal/InNumbers/TBINNewYork/tabid/7047/language/en-GB/Default.aspx" target="_blank"><b>
+	New York: The Ultimate Skyscraper Laboratory
+	</b></a>
+	<br />
+
+	<span class='muted'>
+		
+		Oct 2015 &ndash;
+
+		
+
+		CTBUH Journal, 2015 Issue IV
+	</span>
+</p>
+
+                                                            
+                            </div>
+        
+        
+        
+    </div>
+    <!-- /modules -->
+
+    <div class='row section-container'>
+        <div class="span12">
+            <br>
+            To submit more information or donate images for this project, please use our <a
+                    href="/portal/submit?building_id=14269">submission portal</a>.<br><br>
+        </div>
+    </div>
+
+            <script type='text/javascript'>
+            var buildingId = 14269;
+        </script>
+
+        <script type='text/javascript' src='/js/common.buildings.js'></script>
+    
+</div> <!-- /container -->
+
+<div id='footer' class='container'>
+    <div class='row'>
+        <!--<div class='span2 pull-left'>
+            <form class='form-inline' method='get' action='https://www.ctbuh.org/AboutCTBUH/SearchCTBUHWebsite/tabid/37/language/en-US/Default.aspx' target='_blank'>
+                <input class='input-medium' type='text' name='q' placeholder="Search CTBUH Websites" />
+            </form>
+        </div>-->
+
+        <div class='span6 pull-left footer-text'>
+            &nbsp;
+            <a href='https://www.ctbuh.org' target='_blank'>CTBUH Home</a>
+            &bull; <a href='https://ctbuh.org/newsletter' target='_blank'>CTBUH Mailing List</a>
+            &bull; <a href='/about'>About the Database</a>
+            &bull; <a href="/cdn-cgi/l/email-protection#fb8890828898899a8b9e89989e958f9e89bb988f998e93d594899c">Contact Us</a>
+        </div>
+
+        <div class='span4 pull-right text-right footer-text'>&copy; 2019 <a href='https://www.ctbuh.org' target='_blank'>Council on Tall Buildings and Urban Habitat</a></div>
+    </div>
+</div>
+
+<div id='print-message' class='container'>
+    <div class='row'>
+        <div class='span12'>
+            <p>Please enable printing background colors and images to preserve the full website experience when printing.</p>
+
+            <p>In Internet Explorer, click Print - Page setup and check the <i>Print Background Colors and Images</i> box.<br />
+            In Google Chrome, click Print then check the <i>Background colors and images</i> box under the Options section.<br />
+            In Mozilla Firefox, click File - Page Setup then check the <i>Print Background (colors & images)</i> box.</p>
+        </div>
+    </div>
+</div>
+
+
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script src="/js/bootstrap.min.js"></script>
+<script src="/js/common.js"></script>
+
+<script src="/js/leaflet.js"></script>
+<script src="/js/leaflet.markercluster.js"></script>
+
+<script src="//oss.maxcdn.com/jquery.trip.js/3.1.6/trip.min.js"></script>
+<script src="/js/jquery.typeahead.min.js"></script>
+<script src="/js/jquery.colorbox-min.js"></script>
+<script src="/js/jquery.dataTables.min.js"></script>
+<script src="/js/jquery.dataTables.tableTools.min.js"></script>
+<script src="/js/jquery.nanoscroller.min.js"></script>
+<script src="/js/jquery.maphilight.min.js"></script>
+<script src="/js/jquery.trunk8.min.js"></script>
+<script src="//cdn.jsdelivr.net/qtip2/2.2.1/jquery.qtip.min.js"></script>
+
+<script src="//rum-static.pingdom.net/pa-5d2e370f14cfaa000800014b.js" async></script>
+
+<script type="text/javascript">
+    var _paq = _paq || [];
+    _paq.push(['trackPageView']);
+    _paq.push(['enableLinkTracking']);
+    (function () {
+        var u = "//analytics.ctbuh.org/";
+        _paq.push(['setTrackerUrl', u + 'piwik.php']);
+        _paq.push(['setSiteId', 1]);
+        var d = document, g = d.createElement('script'), s = d.getElementsByTagName('script')[0];
+        g.type = 'text/javascript';
+        g.async = true;
+        g.defer = true;
+        g.src = u + 'piwik.js';
+        s.parentNode.insertBefore(g, s);
+    })();
+</script>
+<noscript><p><img src="//analytics.ctbuh.org/piwik.php?idsite=1" style="border:0;" alt=""/></p></noscript>
+
+</body>
+</html>
